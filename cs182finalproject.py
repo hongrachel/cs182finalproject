@@ -7,6 +7,8 @@ import time
 
 from nltk import word_tokenize
 import nltk
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
 from hatesonar import Sonar
 from pympler import asizeof
 
