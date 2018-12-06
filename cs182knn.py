@@ -4,11 +4,17 @@ from nltk import RegexpParser
 from nltk.tree import Tree
 import re
 import time
+import smart_open
 
 from nltk import word_tokenize
 import nltk
 from hatesonar import Sonar
 from pympler import asizeof
+
+import gensim
+from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+
+# from gensim.models import Word2Vec
 
 #TO DO:
 # - integrate with sample data (train and test) RACHEL DONE
@@ -63,11 +69,12 @@ class knnClassification:
         else:
             return 0
 
-    def loadTrainingData(self, infile):
+    def loadTrainingDataUsingFeatures(self, infile):
         # Translate sentences into points (x,y) -> (hateSpeechScore, bannedWords) based on features
         # Use nrated to keep track of the number of sentence values that we have
         self.nrated = [0] * 2 # binary either gendered or not
         self.labels = [[], []] # binary gendered [0] or not [1]
+        self.labelsTest = [[],[]]
         with open(infile,'r') as f:
             for line in f.readlines():
 
@@ -78,8 +85,68 @@ class knnClassification:
                 y = self.countBannedWords(line[2:])
                 ## Group the sentence
                 self.labels[int(rating)].append((x,y))
-        
-    def predictAndComputeAccuracy(self, infile):
+                
+    def loadTrainingDataUsingVectors(self, infile):
+        self.dict = {}
+        self.labels = [[],[]]
+
+        # Load the dictionary
+        with open(infile,'r') as f:
+            curr_index = 0
+            for line in f.readlines():
+                for index, word in enumerate(line.lower().split()):
+                    if index == 0:
+                        continue
+                    else:
+                        if self.dict.get(word) == None:
+                            self.dict[word] = curr_index
+                            curr_index += 1
+
+        with open(infile, 'r') as f:
+            for line in f.readlines():
+                rating = int(line[0])
+                sentence = line[2:].strip("\n")
+
+                self.labels[rating].append(self.vectorize(sentence))
+
+    # vector library
+    def vectorizeDocument(self, infile):
+        sentences = []
+        with open(infile, 'r') as f:
+            for line in f.readlines():
+                sentence = line[2:].lower().strip(". \n")
+                sentences.append(sentence.split(" "))
+        # Create model to vectorize sentences based on training data
+        document = [TaggedDocument(doc, [i]) for i, doc in enumerate(sentences)]
+        self.model = Doc2Vec(document, vector_size=100, window=2, min_count=1, workers=4)
+
+        self.labels =[[], []]
+        with open(infile, 'r') as f:
+            for line in f.readlines():
+                rating = int(line[0])
+                sentence = line[2:].lower().strip(". \n").split(" ")
+
+                self.labels[rating].append(self.model.infer_vector(sentence))
+       
+    def libraryVectorize(self, sentence): 
+        return self.model.infer_vector(sentence)
+
+    def featureVectorize(self, sentence):
+        x = self.isHateSpeech(line[2:])
+        y = self.countBannedWords(line[2:])
+
+        return (x,y)
+    
+    def vectorizeBoW(self, sentence):
+        vector = [0]*len(self.dict)
+        for word in str(sentence).split():
+            word = self.dict.get(word.lower())
+            if word:
+                vector[word] = 1
+
+        return vector 
+    
+    def predictAndComputeAccuracy(self, infile, type):
         predictedClassification = []
         actualClassification = []
 
@@ -96,12 +163,16 @@ class knnClassification:
 
                 actualClassification.append((sentence, int(actualRating)))
                 
-                # Translate into point
-                x = self.isHateSpeech(line[2:])
-                y = self.countBannedWords(line[2:])
+                sentenceVector = None
+                if type == "features":
+                    sentenceVector = self.featureVectorize(sentence)
+                elif type == "library":
+                    sentenceVector = self.libraryVectorize(sentence)
+                else:
+                    sentenceVector = self.vectorizeBoW(sentence)
 
                 # Take the first k distances
-                kDistances = sorted([(np.linalg.norm(np.subtract(point, (x,y))), rating) \
+                kDistances = sorted([(np.linalg.norm(np.subtract(point, (sentenceVector))), rating) \
                     for (point, rating) in points], key=lambda x: x[0])[:self.K]
                 
                 genderedLikelihood = sum([n for _, n in kDistances])/float(self.K)
@@ -110,10 +181,12 @@ class knnClassification:
                 if genderedLikelihood <= 0.5:
                     predictedClassification.append((sentence, 0))
                     ## For graphing purposes
-                    self.labels[0].append((x,y))
+                    if type == "features":
+                        self.labelsTest[0].append((x,y))
                 else:
                     predictedClassification.append((sentence, 1))
-                    self.labels[1].append((x,y))
+                    if type == "features":
+                        self.labelsTest[1].append((x,y))
             
         correct = 0
         for i in range(len(predictedClassification)):
@@ -147,9 +220,6 @@ class knnClassification:
         plt.show()     
                 
 
-
-
-
 class OtherFeaturesClassifier:
     def loadBannedWords(self):
         self.bannedWords = []
@@ -181,8 +251,6 @@ class OtherFeaturesClassifier:
                 if nltk.pos_tag(firstWord)[0][1] == 'VB':
                     count += 1
         return count
-
-    #def countNameCalling(self, line):
 
     def isHateSpeech(self, line): #using open source hate sonar api
         #indices = {"hate_speech": 0, "offensive_language": 1, "neither": 2}
@@ -251,7 +319,7 @@ class OtherFeaturesClassifier:
                 count += 1
         return count
 
-    def fitModelNaiveBayes(self, k=1):
+    def fitModelNaiveBayes(self, k=2):
         """
         Now you'll fit the model. For historical reasons, we'll call it F.
         F[rating][word] is -log(p(word|rating)).
@@ -331,7 +399,7 @@ class OtherFeaturesClassifier:
         using the test set accuracy?)
         Find and return a good value of alpha
         """
-        accuracies = range(0, 1000)
+        accuracies = range(0, 100)
 
         results = []
         for a in accuracies:
@@ -388,7 +456,7 @@ class BagOfWordsClassifier:
                     index = self.dict.get(word)
                     self.counts[rating][index] += 1
 
-    def fitModelNaiveBayes(self, k=1):
+    def fitModelNaiveBayes(self, k=10):
         """
         Now you'll fit the model. For historical reasons, we'll call it F.
         F[rating][word] is -log(p(word|rating)).
@@ -469,68 +537,132 @@ class BagOfWordsClassifier:
 
 
 if __name__ == '__main__':
-    print ("BAG OF WORDS NAIVE BAYES CLASSIFIER")
-    bagOfWordsStart = time.time()
-    c = BagOfWordsClassifier()
-    print ("Processing training set...")
-    c.buildModel('mini.train')
-    print (len(c.dict), "words in dictionary")
-    print ("Fitting model...")
-    c.fitModelNaiveBayes()
-    print ("Accuracy on validation set:", c.predictAndFindAccuracy('mini.valid')[1])
-    bagOfWordsEnd = time.time()
-    print ("Laplace Smmoothing good k: ", c.tuneK('mini.valid'))
-    print ("TIME:", (bagOfWordsEnd - bagOfWordsStart))
-    print ("MEMORY:", (asizeof.asizeof(c)))
+    # print ("BAG OF WORDS NAIVE BAYES CLASSIFIER")
+    # bagOfWordsStart = time.time()
+    # c = BagOfWordsClassifier()
+    # print ("Processing training set...")
+    # c.buildModel('mini.train')
+    # print (len(c.dict), "words in dictionary")
+    # print ("Fitting model...")
+    # c.fitModelNaiveBayes()
+    # print ("Accuracy on validation set:", c.predictAndFindAccuracy('mini.valid')[1])
+    # bagOfWordsEnd = time.time()
+    # print ("Laplace Smmoothing good k: ", c.tuneK('mini.valid'))
+    # print ("TIME:", (bagOfWordsEnd - bagOfWordsStart))
+    # print ("MEMORY:", (asizeof.asizeof(c)))
 
-    print ("FEATURE NAIVE BAYES CLASSIFIER")
-    featuresStart = time.time()
-    c = OtherFeaturesClassifier()
-    print ("Processing training set...")
-    c.buildModel('mini.train')
-    print ("Fitting model...")
-    c.fitModelNaiveBayes()
-    print ("Accuracy on validation set:", c.predictAndFindAccuracy('mini.valid')[1])
-    featuresEnd = time.time()
-    print ("Laplace Smoothing good k: ", c.tuneK('mini.valid'))
-    print ("TIME:", (featuresEnd - featuresStart))
-    print ("MEMORY:", (asizeof.asizeof(c)))
+    # print ("FEATURE NAIVE BAYES CLASSIFIER")
+    # featuresStart = time.time()
+    # c = OtherFeaturesClassifier()
+    # print ("Processing training set...")
+    # c.buildModel('mini.train')
+    # print ("Fitting model...")
+    # c.fitModelNaiveBayes()
+    # print ("Accuracy on validation set:", c.predictAndFindAccuracy('mini.valid')[1])
+    # featuresEnd = time.time()
+    # print ("Laplace Smoothing good k: ", c.tuneK('mini.valid'))
+    # print ("TIME:", (featuresEnd - featuresStart))
+    # print ("MEMORY:", (asizeof.asizeof(c)))
 
-    import matplotlib.pyplot as plt
+    # import matplotlib.pyplot as plt
+    # print ("K-Nearest Neighbors Classification")
+    # K = 2
+
+    # featuresStart = time.time()
+    # c = knnClassification(K)
+    # ### Training ###
+    # print ("Processing training set...")
+
+    # trainingStart = time.time()
+
+    # c.loadTrainingDataUsingFeatures('mini.train')
+
+    # trainingEnd = time.time()
+    # trainingTime = trainingEnd-trainingStart
+    # trainingSize = asizeof.asizeof(c)
+    # c.graphScatter(c.labels, "Training")
+
+    # ### Testing ###
+    # print ("Processing test set...")
+
+    # testingStart = time.time()
+    # accuracy = c.predictAndComputeAccuracy('mini.valid', "features")
+    # testingEnd = time.time()
+    # testingTime = testingEnd - testingStart
+    # testingSize = asizeof.asizeof(c)
+
+    # ### Graph Labeling & Formatting ###
+    # c.graphScatter(c.labels, "Test") # Labels will now include test data
+
+    # print("Accuracy: ", accuracy)
+    # print("Time on Training: ", trainingTime)
+    # print("Time on Testing: ", testingTime)
+    # print("Training Memory: ", trainingSize)
+    # print("Testing Memory: ", testingSize)
+
+################Vectors########################
+
     print ("K-Nearest Neighbors Classification")
     K = 2
 
-    featuresStart = time.time()
     c = knnClassification(K)
-    ### Training ###
-    print ("Processing training set...")
-
+    print("processing training")
     trainingStart = time.time()
 
-    c.loadTrainingData('mini.train')
-
+    c.vectorizeDocument("mini.train")
     trainingEnd = time.time()
-    trainingTime = trainingEnd-trainingStart
-    trainingSize = asizeof.asizeof(c)
-    c.graphScatter(c.labels, "Training")
-
-    ### Testing ###
-    print ("Processing test set...")
+    print("processing test")
 
     testingStart = time.time()
-    accuracy = c.predictAndComputeAccuracy('mini.valid')
+    accuracy = c.predictAndComputeAccuracy('mini.valid', "library")
+
     testingEnd = time.time()
     testingTime = testingEnd - testingStart
+    trainingTime = trainingEnd-trainingStart
+    trainingSize = asizeof.asizeof(c)
+
     testingSize = asizeof.asizeof(c)
-
-    ### Graph Labeling & Formatting ###
-    c.graphScatter(c.labels, "Test") # Labels will now include test data
-
     print("Accuracy: ", accuracy)
+
     print("Time on Training: ", trainingTime)
     print("Time on Testing: ", testingTime)
     print("Training Memory: ", trainingSize)
     print("Testing Memory: ", testingSize)
+    # featuresStart = time.time()
+    # c = knnClassification(K)
+    # ### Training ###
+    # print ("Processing training set...")
+
+    # trainingStart = time.time()
+
+    # c.loadTrainingDataUsingVectors('mini.train')
+
+    # trainingEnd = time.time()
+    # trainingTime = trainingEnd-trainingStart
+    # trainingSize = asizeof.asizeof(c)
+    # # c.graphScatter(c.labels, "Training")
+
+    # ### Testing ###
+    # print ("Processing test set...")
+
+    # testingStart = time.time()
+    # accuracy = c.predictAndComputeAccuracy('mini.valid', "vectors")
+    # testingEnd = time.time()
+    # testingTime = testingEnd - testingStart
+    # testingSize = asizeof.asizeof(c)
+
+    # ### Graph Labeling & Formatting ###
+    # # c.graphScatter(c.labels, "Test") # Labels will now include test data
+
+    # print("Accuracy: ", accuracy)
+    # print("Time on Training: ", trainingTime)
+    # print("Time on Testing: ", testingTime)
+    # print("Training Memory: ", trainingSize)
+    # print("Testing Memory: ", testingSize)
+
+    # c = knnClassification(2)
+    # c.loadTrainingDataUsingVectors("mini.train")
+
 
 
 
