@@ -1,26 +1,51 @@
+**In order for teaching staff to run, in Python3, need to install nltk, hatesonar, pympler, and matplotlib
+
+DIFFERENT ALGORITHMS: each bullet point (return accuracy, runtime, memory)
+- Naive Bayes with Bag of Words
+  - Laplace Smoothing
+- Naive Bayes with features
+  - Laplace Smoothing
+- Naive Bayes with bigram
+  - Laplace Smoothing
+- K nearest neighbors
+  - word vector
+  - library 
+  - features DONE
+
 RESULTS
 
 Naive Bayes
-Accuracy on validation set: 0.8706896551724138
-TIME: 0.12828898429870605
-MEMORY: 469648
-ACCURACY WITH LAPLACE SMOOTHING:  0.9109195402298851
-Good k for Laplace: 0.164
+    Accuracy on validation set: 0.8706896551724138
+    TIME: 0.12828898429870605
+    MEMORY: 469648
+    ACCURACY WITH LAPLACE SMOOTHING:  0.9109195402298851
+    Good k for Laplace: 0.164
 
 Bigram Naive Bayes Classifier
-Accuracy on validation set: 0.4109195402298851
-TIME: 0.683758020401001
-MEMORY: 1664016
-ACCURACY WITH LAPLACE SMOOTHING:  0.4281609195402299
-Good k for Laplace: 0.001
+    Accuracy on validation set: 0.4109195402298851
+    TIME: 0.683758020401001
+    MEMORY: 1664016
+    ACCURACY WITH LAPLACE SMOOTHING:  0.4281609195402299
+    Good k for Laplace: 0.001
 
 Feature Naive Bayes Classifier
     - feature 1 = number of "banned" words (see genderedwords.txt)
     - feature 2 = number of exclamation points
     - feature 3 = number of commands
     - feature 4 = is hate speech (using Sonar hate api)
-Accuracy on validation set: 
-TIME: 
-MEMORY: 
-ACCURACY WITH LAPLACE SMOOTHING: 
-Good k for Laplace: 
+    Accuracy on validation set: 0.9425287356321839
+    TIME: 1040.2238447666168
+    MEMORY: 10384
+    ACCURACY WITH LAPLACE SMOOTHING:  0.9425287356321839
+    Good k for Laplace: 0.1
+
+K nearest neighbors
+    - features (feature 1 and feature 4 returning confidence)
+    - word vector
+
+    - library
+        Accuracy:  0.6091954022988506
+        Time on Training:  0.5297079086303711
+        Time on Testing:  2.0897653102874756
+        Training Memory:  3478224
+        Testing Memory:  3478224

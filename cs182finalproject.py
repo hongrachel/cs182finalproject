@@ -23,7 +23,7 @@ from pympler import asizeof
 # - k nearest neighbors KOFI
 #   - word vector vs library vs features
 
-#DIFFERENT ALGORITHMS: each bullet point (return accuracy, runtime, memory)
+# DIFFERENT ALGORITHMS: each bullet point (return accuracy, runtime, memory)
 # - Naive Bayes with Bag of Words
 #   - Laplace Smoothing
 # - Naive Bayes with features
@@ -210,8 +210,8 @@ class OtherFeaturesClassifier:
 
     def laplaceSmoothing(self, infile):
         accuracies = []
-        for i in range(1, 1001):
-            accuracies.append(float(i)/float(1000))
+        for i in range(1, 11):
+            accuracies.append(float(i)/float(10))
         results = []
         for a in accuracies:
             self.fitModelNaiveBayes(a)
@@ -326,7 +326,7 @@ class BagOfWordsClassifier:
     def laplaceSmoothing(self, infile):
         accuracies = []
         for i in range(1, 1001):
-            accuracies.append(float(i)/float(1000))
+            accuracies.append(float(i)/float(10))
         results = []
         for a in accuracies:
             self.fitModelNaiveBayes(a)
