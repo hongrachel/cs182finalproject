@@ -1,0 +1,26 @@
+RESULTS
+
+Naive Bayes
+Accuracy on validation set: 0.8706896551724138
+TIME: 0.12828898429870605
+MEMORY: 469648
+ACCURACY WITH LAPLACE SMOOTHING:  0.9109195402298851
+Good k for Laplace: 0.164
+
+Bigram Naive Bayes Classifier
+Accuracy on validation set: 0.4109195402298851
+TIME: 0.683758020401001
+MEMORY: 1664016
+ACCURACY WITH LAPLACE SMOOTHING:  0.4281609195402299
+Good k for Laplace: 0.001
+
+Feature Naive Bayes Classifier
+    - feature 1 = number of "banned" words (see genderedwords.txt)
+    - feature 2 = number of exclamation points
+    - feature 3 = number of commands
+    - feature 4 = is hate speech (using Sonar hate api)
+Accuracy on validation set: 
+TIME: 
+MEMORY: 
+ACCURACY WITH LAPLACE SMOOTHING: 
+Good k for Laplace: 

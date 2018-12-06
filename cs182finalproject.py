@@ -25,15 +25,15 @@ from pympler import asizeof
 
 #DIFFERENT ALGORITHMS: each bullet point (return accuracy, runtime, memory)
 # - Naive Bayes with Bag of Words
-#   - Laplace Smoothing KOFI
+#   - Laplace Smoothing
 # - Naive Bayes with features
-#   - Laplace Smoothing KOFI
-# - Naive Bayes with bigram/tfidf
-#   - Laplace Smoothing KOFI
-# - K nearest neighbors KOFI
-#   - word vector
-#   - library
-#   - features
+#   - Laplace Smoothing
+# - Naive Bayes with bigram
+#   - Laplace Smoothing
+# - K nearest neighbors
+#   - word vector KOFI
+#   - library KOFI
+#   - features DONE
 
 # - to consider: feature hashing?
 
@@ -48,14 +48,14 @@ class OtherFeaturesClassifier:
         self.loadBannedWords()
         count = 0
         for index, word in enumerate(line.split()):
-            if word.lower() in self.bannedWords:
+            if word.lower().strip('.') in self.bannedWords:
                 count += 1
         return count
 
     def countExclamationPoints(self, line):
         count = 0
         for word in line.split():
-            if word == '!':
+            if '!' in word:
                 count += 1
         return count
 
@@ -138,7 +138,7 @@ class OtherFeaturesClassifier:
                 count += 1
         return count
 
-    def fitModelNaiveBayes(self, alpha=1):
+    def fitModelNaiveBayes(self, k=1):
         """
         Now you'll fit the model. For historical reasons, we'll call it F.
         F[rating][word] is -log(p(word|rating)).
@@ -152,9 +152,9 @@ class OtherFeaturesClassifier:
         for rating in range(2):
             for feature_i in self.featureFreq[rating]:
                 featureName = ''.join([i for i in feature_i if not i.isdigit()])
-                p = float(alpha + self.featureFreq[rating][feature_i]) \
+                p = float(k + self.featureFreq[rating][feature_i]) \
                     / (self.totalSentencesForFeature(featureName, rating) + \
-                     self.totalOutcomesForFeature(featureName, rating)) #P(Fi|Y)
+                     k*self.totalOutcomesForFeature(featureName, rating)) #P(Fi|Y)
                 if p == 0:
                     self.F[rating][feature_i] = 0
                 else:
@@ -207,29 +207,19 @@ class OtherFeaturesClassifier:
                 correct += 1
         return (predicted_ratings, float(correct)/float(len(predicted_ratings)))
 
-    def tuneAlpha(self, infile):
-        """
-        Alpha is a hyperparameter of this model - a tunable option that affects
-        the values that appear in F. Let's tune it!
-        We've split the dataset into 3 parts: the training set you use to fit the model
-        the validation and test sets you use to evaluate the model. The training set
-        is used to optimize the regular parameters, and the validation set is used to
-        optimize the hyperparameters. (Why don't you want to set the hyperparameters
-        using the test set accuracy?)
-        Find and return a good value of alpha
-        """
+
+    def laplaceSmoothing(self, infile):
         accuracies = []
         for i in range(1, 1001):
             accuracies.append(float(i)/float(1000))
-
-        print(accuracies)
         results = []
         for a in accuracies:
             self.fitModelNaiveBayes(a)
             _, pr = self.predictAndFindAccuracy(infile)
-            results.append(-pr)
+            results.append(pr)
 
-        index = np.argmin(results)
+        index = np.argmax(results)
+        print ("ACCURACY WITH LAPLACE SMOOTHING: ", np.max(results))
         return accuracies[index]
 
 
@@ -263,6 +253,7 @@ class BagOfWordsClassifier:
                         rating = int(word)
                         self.nrated[rating] += 1
                     else:
+                        word = word.strip('.')
                         if self.dict.get(word) == None:
                             self.dict[word] = curr_index
                             curr_index += 1
@@ -275,10 +266,11 @@ class BagOfWordsClassifier:
                 line_content = line.lower().split()
                 rating = int(line_content[0])
                 for word in line_content[1:]:
+                    word = word.strip('.')
                     index = self.dict.get(word)
                     self.counts[rating][index] += 1
 
-    def fitModelNaiveBayes(self, alpha=1):
+    def fitModelNaiveBayes(self, k=1):
         """
         Now you'll fit the model. For historical reasons, we'll call it F.
         F[rating][word] is -log(p(word|rating)).
@@ -291,10 +283,11 @@ class BagOfWordsClassifier:
 
         for rating in range(2):
             for word in self.dict:
+                word = word.strip('.')
                 word_index = self.dict[word]
-                p = float(alpha + self.counts[rating][word_index]) \
+                p = float(k + self.counts[rating][word_index]) \
                     / (float(sum(self.counts[rating])) + \
-                     float((alpha*len(self.counts[rating])))) #P(Wi|Y)
+                     float((k*len(self.counts[rating])))) #P(Wi|Y)
                 if p == 0:
                     self.F[rating][word_index] = 0
                 else:
@@ -317,6 +310,7 @@ class BagOfWordsClassifier:
                 for i in range(2):
                     sent = 0
                     for word in line.lower().split()[1:]:
+                        word = word.strip('.')
                         if self.dict.get(word) != None:
                             sent += self.F[i][self.dict[word]] # P(Y| W1...Wn) = product of P(Wi|Y)
                     word_ratings.append(sent)
@@ -329,29 +323,115 @@ class BagOfWordsClassifier:
                 correct += 1
         return (predicted_ratings, float(correct)/float(len(predicted_ratings)))
 
-    def tuneAlpha(self, infile):
-        """
-        Alpha is a hyperparameter of this model - a tunable option that affects
-        the values that appear in F. Let's tune it!
-        We've split the dataset into 3 parts: the training set you use to fit the model
-        the validation and test sets you use to evaluate the model. The training set
-        is used to optimize the regular parameters, and the validation set is used to
-        optimize the hyperparameters. (Why don't you want to set the hyperparameters
-        using the test set accuracy?)
-        Find and return a good value of alpha
-        """
+    def laplaceSmoothing(self, infile):
         accuracies = []
         for i in range(1, 1001):
             accuracies.append(float(i)/float(1000))
-
-        print(accuracies)
         results = []
         for a in accuracies:
             self.fitModelNaiveBayes(a)
             _, pr = self.predictAndFindAccuracy(infile)
-            results.append(-pr)
+            results.append(pr)
 
-        index = np.argmin(results)
+        index = np.argmax(results)
+        print ("ACCURACY WITH LAPLACE SMOOTHING: ", np.max(results))
+        return accuracies[index]
+
+class BigramClassifier:
+    def buildModel(self, infile):
+
+        self.dict = {}
+        self.nrated = [0] * 2 #binary either gendered or not
+
+        with open(infile,'r') as f:
+            curr_index = 0
+            for line in f.readlines():
+                line_content = line.lower().split()
+                rating = int(line_content[0])
+                self.nrated[rating] += 1
+                for i in range(1, len(line_content)-1):
+                    bigram = (line_content[i].strip('.'), line_content[i + 1].strip('.'))
+                    if self.dict.get(bigram) == None:
+                        self.dict[bigram] = curr_index
+                        curr_index += 1
+
+        # Fill counts
+        self.counts = [[0] * len(self.dict) for _ in range(2)]
+
+        with open(infile, 'r') as f:
+            for line in f.readlines():
+                line_content = line.lower().split()
+                rating = int(line_content[0])
+                for i in range(1, len(line_content)-1):
+                    bigram = (line_content[i].strip('.'), line_content[i + 1].strip('.'))
+                    index = self.dict.get(bigram)
+                    self.counts[rating][index] += 1
+
+    def fitModelNaiveBayes(self, k=1):
+        """
+        Now you'll fit the model. For historical reasons, we'll call it F.
+        F[rating][word] is -log(p(word|rating)).
+
+        P(word|rating) =
+        (k + self.counts[rating][word]) /
+          (sum(self.counts[rating]) + (k * len(self.counts[rating])))
+        """
+        self.F = [[0] * len(self.dict) for _ in range(2)]
+
+        for rating in range(2):
+            for bigram in self.dict:
+                bigram_index = self.dict[bigram]
+                p = float(k + self.counts[rating][bigram_index]) \
+                    / (float(sum(self.counts[rating])) + \
+                     float((k*len(self.counts[rating])))) #P(Wi|Y)
+                if p == 0:
+                    self.F[rating][bigram_index] = 0
+                else:
+                    self.F[rating][bigram_index] = -log(p)
+            
+    def predictAndFindAccuracy(self, infile):
+        """
+        Test time! The infile has the same format as it did before. For each review,
+        predict the rating. Ignore words that don't appear in your dictionary.
+        Are there any factors that won't affect your prediction?
+        You'll report both the list of predicted ratings in order and the accuracy.
+        """
+        predicted_ratings = []
+        actual_ratings = []
+
+        with open(infile, 'r') as f:
+            for line in f.readlines():
+                line_content = line.lower().split()
+                rating = int(line_content[0])
+                bigram_ratings = []
+                for rating in range(2):
+                    sent = 0
+                    for i in range(1, len(line_content)-1):
+                        bigram = (line_content[i].strip('.'), line_content[i + 1].strip('.'))
+                        if self.dict.get(bigram) != None:
+                            sent += self.F[rating][self.dict[bigram]] # P(Y| W1...Wn) = product of P(Wi|Y)
+                    bigram_ratings.append(sent)
+                actual_ratings.append(rating)
+                predicted_ratings.append(range(2)[np.argmin(bigram_ratings)])
+            
+        correct = 0
+        for i in range(len(predicted_ratings)):
+            if predicted_ratings[i] == actual_ratings[i]:
+                correct += 1
+        return (predicted_ratings, float(correct)/float(len(predicted_ratings)))
+
+    def laplaceSmoothing(self, infile):
+        accuracies = []
+        for i in range(1, 1001):
+            accuracies.append(float(i)/float(1000))
+        results = []
+        for a in accuracies:
+            self.fitModelNaiveBayes(a)
+            _, pr = self.predictAndFindAccuracy(infile)
+            results.append(pr)
+
+        index = np.argmax(results)
+        print ("ACCURACY WITH LAPLACE SMOOTHING: ", np.max(results))
         return accuracies[index]
 
 
@@ -366,9 +446,9 @@ if __name__ == '__main__':
     # c.fitModelNaiveBayes()
     # print ("Accuracy on validation set:", c.predictAndFindAccuracy('mini.valid')[1])
     # bagOfWordsEnd = time.time()
-    # print ("Good alpha:", c.tuneAlpha('mini.valid'))
     # print ("TIME:", (bagOfWordsEnd - bagOfWordsStart))
     # print ("MEMORY:", (asizeof.asizeof(c)))
+    # print ("Good k for Laplace:", c.laplaceSmoothing('mini.valid'))
 
     print ("FEATURE NAIVE BAYES CLASSIFIER")
     featuresStart = time.time()
@@ -381,3 +461,18 @@ if __name__ == '__main__':
     featuresEnd = time.time()
     print ("TIME:", (featuresEnd - featuresStart))
     print ("MEMORY:", (asizeof.asizeof(c)))
+    print ("Good k for Laplace:", c.laplaceSmoothing('mini.valid'))
+
+    # print ("BIGRAM NAIVE BAYES CLASSIFIER")
+    # bagOfWordsStart = time.time()
+    # c = BigramClassifier()
+    # print ("Processing training set...")
+    # c.buildModel('mini.train')
+    # print (len(c.dict), "words in dictionary")
+    # print ("Fitting model...")
+    # c.fitModelNaiveBayes()
+    # print ("Accuracy on validation set:", c.predictAndFindAccuracy('mini.valid')[1])
+    # bagOfWordsEnd = time.time()
+    # print ("TIME:", (bagOfWordsEnd - bagOfWordsStart))
+    # print ("MEMORY:", (asizeof.asizeof(c)))
+    # print ("Good k for Laplace:", c.laplaceSmoothing('mini.valid'))
