@@ -67,22 +67,27 @@ class knnClassifier:
 
     
     def graphScatter(self, labels, dataType):
-        scale = 100.0
+        #scale = 50.0
         #scale = 100.0 * np.random.rand(len(labels[0]+labels[1]))
 
+        count = 0
+        print ("LABELS: ", labels)
         for index, label in enumerate(labels):
             x, y = zip(*label)
             color, label = "black", "n/a"
 
             if index == 0: # Non-gendered
-                color, label = "green", "valid"
+                color, label = "green", "Non-gendered"
+                scale = 100.0
+                count += 1
             else: # gendered
-                color, label = "red", "invalid"
+                color, label = "red", "Gendered"
+                scale = 50
             try:
-                plt.scatter(x, y, alpha=0.5, s=scale, c=color, label=label)
+                plt.scatter(x, y, alpha=0.1, s=scale, c=color, label=label)
             except:
                 continue
-
+        print ("COUNT: ", count)
         plt.title('K-NN: {} Data, K={}'.format(dataType, K))
         plt.xlabel = "Hatespeech Score"
         plt.ylabel = "Number of banned words"
