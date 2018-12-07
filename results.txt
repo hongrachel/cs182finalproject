@@ -1,4 +1,4 @@
-**In order for teaching staff to run, in Python3, need to install nltk, hatesonar, pympler, and matplotlib
+**In order for teaching staff to run, in Python3, need to install nltk, hatesonar, pympler, and matplotlib, smart_open, gensym
 
 DIFFERENT ALGORITHMS: each bullet point (return accuracy, runtime, memory)
 - Naive Bayes with Bag of Words
@@ -41,11 +41,20 @@ Feature Naive Bayes Classifier
 
 K nearest neighbors
     - features (feature 1 and feature 4 returning confidence)
+        Accuracy:  0.9339080459770115
+        Time on Training:  378.86953687667847
+        Time on Testing:  232.45858716964722
+        Training Memory:  65792
+        Testing Memory:  95272
     - word vector
-
+        Accuracy:  0.8390804597701149
+        Time on Training:  0.016694068908691406
+        Time on Testing:  54.08175492286682
+        Training Memory:  12476360
     - library
-        Accuracy:  0.6091954022988506
-        Time on Training:  0.5297079086303711
-        Time on Testing:  2.0897653102874756
-        Training Memory:  3478224
-        Testing Memory:  3478224
+        Accuracy:  0.5517241379310345
+        Time on Training:  0.22538399696350098
+        Time on Testing:  1.06097412109375
+        Training Memory:  3032368
+        Testing Memory:  3068768
+        Testing Memory:  19561848

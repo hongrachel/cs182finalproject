@@ -67,16 +67,17 @@ class knnClassifier:
 
     
     def graphScatter(self, labels, dataType):
-        scale = 100.0 * np.random.rand(len(labels[0]+labels[1]))
+        scale = 100.0
+        #scale = 100.0 * np.random.rand(len(labels[0]+labels[1]))
 
         for index, label in enumerate(labels):
             x, y = zip(*label)
             color, label = "black", "n/a"
 
             if index == 0: # Non-gendered
-                color, label = "blue", "valid"
+                color, label = "green", "valid"
             else: # gendered
-                color, label = "yellow", "invalid"
+                color, label = "red", "invalid"
             try:
                 plt.scatter(x, y, alpha=0.5, s=scale, c=color, label=label)
             except:
@@ -213,59 +214,59 @@ if __name__ == '__main__':
     print ("K-Nearest Neighbors Classifications")
 
     K = 5   
-    '''Classify based on word vectors'''
-    print ("Word Vector Classifier")
-    classifier = wordVectorClassifier(K)
-    ### Training ###
-    print ("Processing training set...")
-    trainingStart = time.time()
-    classifier.loadTrainingData('mini.train')
-    trainingEnd = time.time()
+    # '''Classify based on word vectors'''
+    # print ("Word Vector Classifier")
+    # classifier = wordVectorClassifier(K)
+    # ### Training ###
+    # print ("Processing training set...")
+    # trainingStart = time.time()
+    # classifier.loadTrainingData('mini.train')
+    # trainingEnd = time.time()
 
-    trainingTime = trainingEnd-trainingStart
-    trainingSize = asizeof.asizeof(classifier)
+    # trainingTime = trainingEnd-trainingStart
+    # trainingSize = asizeof.asizeof(classifier)
 
-    ### Testing ###
-    print ("Processing test set...")
-    testingStart = time.time()
-    accuracy = classifier.predictAndComputeAccuracy('mini.valid')
-    testingEnd = time.time()
+    # ### Testing ###
+    # print ("Processing test set...")
+    # testingStart = time.time()
+    # accuracy = classifier.predictAndComputeAccuracy('mini.valid')
+    # testingEnd = time.time()
 
-    testingTime = testingEnd - testingStart
-    testingSize = asizeof.asizeof(classifier)
+    # testingTime = testingEnd - testingStart
+    # testingSize = asizeof.asizeof(classifier)
 
-    print("Accuracy: ", accuracy)
-    print("Time on Training: ", trainingTime)
-    print("Time on Testing: ", testingTime)
-    print("Training Memory: ", trainingSize)
-    print("Testing Memory: ", testingSize)
+    # print("Accuracy: ", accuracy)
+    # print("Time on Training: ", trainingTime)
+    # print("Time on Testing: ", testingTime)
+    # print("Training Memory: ", trainingSize)
+    # print("Testing Memory: ", testingSize)
 
-    '''Classify based on sentence meaning'''
-    classifier = libraryVectorClassifier(K)
-    ### Training ###
-    print ("Library Vectors Classifier")
-    print ("Processing training set...")
-    trainingStart = time.time()
-    classifier.loadTrainingData('mini.train')
-    trainingEnd = time.time()
+    # '''Classify based on sentence meaning'''
+    # classifier = libraryVectorClassifier(K)
+    # ### Training ###
+    # print ("Library Vectors Classifier")
+    # print ("Processing training set...")
+    # trainingStart = time.time()
+    # classifier.loadTrainingData('mini.train')
+    # trainingEnd = time.time()
 
-    trainingTime = trainingEnd-trainingStart
-    trainingSize = asizeof.asizeof(classifier)
+    # trainingTime = trainingEnd-trainingStart
+    # trainingSize = asizeof.asizeof(classifier)
 
-    ### Testing ###
-    print ("Processing test set...")
-    testingStart = time.time()
-    accuracy = classifier.predictAndComputeAccuracy('mini.valid')
-    testingEnd = time.time()
+    # ### Testing ###
+    # print ("Processing test set...")
+    # testingStart = time.time()
+    # accuracy = classifier.predictAndComputeAccuracy('mini.valid')
+    # testingEnd = time.time()
 
-    testingTime = testingEnd - testingStart
-    testingSize = asizeof.asizeof(classifier)
+    # testingTime = testingEnd - testingStart
+    # testingSize = asizeof.asizeof(classifier)
 
-    print("Accuracy: ", accuracy)
-    print("Time on Training: ", trainingTime)
-    print("Time on Testing: ", testingTime)
-    print("Training Memory: ", trainingSize)
-    print("Testing Memory: ", testingSize)
+    # print("Accuracy: ", accuracy)
+    # print("Time on Training: ", trainingTime)
+    # print("Time on Testing: ", testingTime)
+    # print("Training Memory: ", trainingSize)
+    # print("Testing Memory: ", testingSize)
 
 
     '''Classify based on features'''
