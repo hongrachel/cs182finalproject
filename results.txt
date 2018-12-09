@@ -1,44 +1,65 @@
 KEY THINGS FOR WRITEUP:
 * In order for teaching staff to run, in Python3, need to install nltk, hatesonar, pympler, and matplotlib, smart_open, gensym
+* run python3 naivebayesclassifiers.py for naive bayes classifiers
+  run python3 knn.py for knn classifiers
+
+* Naive Bayes Classifier results:
+    * bigram (like bag of words but stores occurences of pairs of words the classifier has seen, in the specific order) has low accuracy which makes sense since there are 5000 words in our dictionary from our training data, and the test data has lots of new pairs of words that the classifier has not yet seen.
+    * feature takes a really long time since we use an api to determine whether a sentence is hate speech, so making that api request takes a while for each sentence in our training and test data.
+    * bigram used up a lot more memory than bag of words, which makes sense since our dictionary now records pairs of words, which results in a lot more keys and probabilities to store. Also explains why bigram took a longer time than bag of words.
+    * feature classifier had a lot less memory because there were only 4 features compared to the several thousand words in the dictionary.
+* Laplace smoothing for Naive Bayes Classifier:
+    * k didn't improve accuracy for feature classifier, which makes sense since the features were binary, and there were 4 of them, so the classifier had probably seen a lot of them. This means adding more "occurences" would not have changed the probability.
+    * maximum of graph is optimal k-value for best accuracy
+    * for bigram, and bag of words, as k gets large, the graph started decreasing since k/k*total started to dominate the entire space, which made the probabilities
+    as if the words would appear randomly ,so accuracy goes down.
 
 DIFFERENT ALGORITHMS: each bullet point (return accuracy, runtime, memory)
 - Naive Bayes with Bag of Words
   - Laplace Smoothing
+  - accuracy vs k graph
 - Naive Bayes with features
   - Laplace Smoothing
+  - accuracy vs k graph
 - Naive Bayes with bigram
   - Laplace Smoothing
-- K nearest neighbors
-  - word vector
-  - library 
-  - features
+  - accuracy vs k graph
+- K nearest neighbors with word vector
+  - accuracy vs k graph
+- K nearest neighbors with library
+  - accuracy vs k graph
+- K nearest neighbors with features
+  - accuracy vs k graph
 
 RESULTS
 
-Naive Bayes
-    Accuracy on validation set: 0.8706896551724138
-    TIME: 0.12828898429870605
-    MEMORY: 469648
-    ACCURACY WITH LAPLACE SMOOTHING:  0.9109195402298851
-    Good k for Laplace: 0.164
+Naive Bayes Classifier
+    - Bag of Words
+        2334 words in dictionary
+        Accuracy on validation set: 0.8706896551724138
+        TIME: 0.12828898429870605
+        MEMORY: 469648
+        ACCURACY WITH LAPLACE SMOOTHING:  0.9109195402298851
+        Good k for Laplace: 0.164
 
-Bigram Naive Bayes Classifier
-    Accuracy on validation set: 0.4109195402298851
-    TIME: 0.683758020401001
-    MEMORY: 1664016
-    ACCURACY WITH LAPLACE SMOOTHING:  0.4281609195402299
-    Good k for Laplace: 0.001
+    - Bigram
+        5642 words in dictionary
+        Accuracy on validation set: 0.4109195402298851
+        TIME: 0.683758020401001
+        MEMORY: 1664016
+        ACCURACY WITH LAPLACE SMOOTHING:  0.4281609195402299
+        Good k for Laplace: 0.001
 
-Feature Naive Bayes Classifier
-    - feature 1 = number of "banned" words (see genderedwords.txt)
-    - feature 2 = number of exclamation points
-    - feature 3 = number of commands
-    - feature 4 = is hate speech (using Sonar hate api)
-    Accuracy on validation set: 0.9425287356321839
-    TIME: 1040.2238447666168
-    MEMORY: 10384
-    ACCURACY WITH LAPLACE SMOOTHING:  0.9425287356321839
-    Good k for Laplace: 0.1
+    - Feature
+        - feature 1 = number of "banned" words (see genderedwords.txt)
+        - feature 2 = number of exclamation points
+        - feature 3 = number of commands
+        - feature 4 = is hate speech (using Sonar hate api)
+        Accuracy on validation set: 0.9425287356321839
+        TIME: 1040.2238447666168
+        MEMORY: 10384
+        ACCURACY WITH LAPLACE SMOOTHING:  0.9425287356321839
+        Good k for Laplace: 0.1
 
 K nearest neighbors
     - features (feature 1 and feature 4 returning confidence)
