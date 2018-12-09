@@ -1,4 +1,5 @@
-**In order for teaching staff to run, in Python3, need to install nltk, hatesonar, pympler, and matplotlib, smart_open, gensym
+KEY THINGS FOR WRITEUP:
+* In order for teaching staff to run, in Python3, need to install nltk, hatesonar, pympler, and matplotlib, smart_open, gensym
 
 DIFFERENT ALGORITHMS: each bullet point (return accuracy, runtime, memory)
 - Naive Bayes with Bag of Words
@@ -10,7 +11,7 @@ DIFFERENT ALGORITHMS: each bullet point (return accuracy, runtime, memory)
 - K nearest neighbors
   - word vector
   - library 
-  - features DONE
+  - features
 
 RESULTS
 
