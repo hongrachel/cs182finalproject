@@ -73,10 +73,11 @@ K nearest neighbors
         Time on Training:  0.016694068908691406
         Time on Testing:  54.08175492286682
         Training Memory:  12476360
+        Testing Memory:  19561848
     - library
         Accuracy:  0.5517241379310345
         Time on Training:  0.22538399696350098
         Time on Testing:  1.06097412109375
         Training Memory:  3032368
         Testing Memory:  3068768
-        Testing Memory:  19561848
+        

@@ -13,12 +13,7 @@ nltk.download('averaged_perceptron_tagger')
 from hatesonar import Sonar
 from pympler import asizeof
 
-#TO DO:
-# - don't hard code features into NB RACHEL (after Friday)
-# - clean up code
-# - graph accuracy vs k
-
-class NaiveBayesClassifier:
+class NaiveBayesClassifier: #parent naive bayes classifier
     def buildModel(self, infile):
         pass
 
@@ -75,9 +70,6 @@ class BagOfWordsClassifier(NaiveBayesClassifier):
         counts[rating][word] is the number of times word appears in any of the
         sentences corresponding to the rating
         nrated[rating] is the total number of sentences either gendered or not
-
-        Hint: Make sure to actually set the self.dict, self.counts, and
-        self.nrated variables!
         """
 
         self.dict = {}
@@ -191,7 +183,7 @@ class BigramClassifier(NaiveBayesClassifier):
                     index = self.dict.get(bigram)
                     self.counts[rating][index] += 1
 
-    def fitModelNaiveBayes(self, k=0):
+    def fitModelNaiveBayes(self, k=1):
         self.F = [[0] * len(self.dict) for _ in range(2)]
 
         for rating in range(2):
